@@ -20,6 +20,7 @@ const int nr_pixels = 3 * base_width * base_heigth * 2;
 // TODO: fill pixels array in the correct way
 double *build_neighborhood(double *G, int L, int x, int y) {
     // those values change for each level
+    // TODO: calculate offset for each level, width and heigth
     int offset;
     int width, heigth;
 
