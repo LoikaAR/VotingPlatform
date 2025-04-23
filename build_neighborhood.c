@@ -4,17 +4,23 @@
 #include "build_neighborhood.h"
 
 // is it a constant?
-const int neighborhood = 100;
-const int nr_pixels = 1000;
+// to add meaningful numbers
 // understand x, y values and neighborhood dimension
+// L is the level of the image of the gaussian filter
+// TODO: right values for constants
+const int neighborhood_px = 100;
+const int num_levels = 4;
+const int base_width = 256;
+const int base_heigth = 256;
+// TODO: fix with real value
+const int nr_pixels = base_width * base_heigth * 2;
 
-double *build_neighborhood(double *G, double *L, int x, int y) {
+double *build_neighborhood(double *G, int L, int x, int y) {
     float *pixels = malloc(nr_pixels * sizeof(float*));
     // iterate the neighborhood
-    for (int i, j; i,j < neighborhood; i++, j++) {
-        
+    for (int i, j; i,j < neighborhood_px; i++, j++) {
+        pixels[i] = G[L + (x + i)];
     }
-
 }
 
 
