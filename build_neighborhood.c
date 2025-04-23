@@ -19,26 +19,38 @@ const int nr_pixels = 3 * base_width * base_heigth * 2;
 
 // TODO: fill pixels array in the correct way
 double *build_neighborhood(double *G, int L, int x, int y) {
+    // those values change for each level
+    int offset;
+    int width, heigth;
+
     float *pixels = malloc(nr_pixels * sizeof(float*));
     // iterate the neighborhood
-    for (int i, j; i,j < neighborhood_px; i++, j++) {
-        pixels[i] = G[L + (x + i)];
+    for (int i, j; i,j < neighborhood_px; i+=3, j+=3) {
+        // Check: rgb encoding?
+        // row index
+        int xi = (x + i) % width;
+        // column index
+        int yi = (y + j) % heigth;
+        // append right pixel (3 channels) to the pixels array
+        pixels[i] = G[offset + xi + width * yi];
+        pixels[i+1] = G[offset + xi + width * yi + 1];
+        pixels[i+2] = G[offset + xi + width * yi + 2];
     }
     // upper neighborhood
     if (L < sizeof(G)/(sizeof(float*) * 3)) {
-        for (int i, j; i, j < upper_neighborhood_px; i++, j++) {
-            return 0;
+        for (int i, j; i, j < upper_neighborhood_px; i+=3, j+=3) {
+            // Check: rgb encoding?
+            // row index
+            int xi = (x / 2 + i) % width;
+            // column index
+            int yi = (y / 2 + j) % heigth;
+            // append right pixel (3 channels) to the pixels array
+            pixels[i] = G[offset + xi + width * yi];
+            pixels[i+1] = G[offset + xi + width * yi + 1];
+            pixels[i+2] = G[offset + xi + width * yi + 2];
         }
     }
+
+    return pixels;
 }
 
-/*
-def build_neighborhood(G, L, x, y):
-    pixels = []
-    for i, j in neighborhood:
-        pixels.append(G[L][(x + i) % G[L].shape[0], (y + j) % G[L].shape[1]])
-    if L < len(G) - 1:
-        for i, j in upper_neighborhood:
-            pixels.append(G[L + 1][(x // 2 + i) % G[L + 1].shape[0], (y // 2 + j) % G[L + 1].shape[1]])
-    return np.array(pixels)
-*/
