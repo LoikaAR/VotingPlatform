@@ -9,20 +9,28 @@
 // L is the level of the image of the gaussian filter
 // TODO: right values for constants
 const int neighborhood_px = 100;
+const int upper_neighborhood_px = 50;
 const int num_levels = 4;
-const int base_width = 256;
-const int base_heigth = 256;
+const int base_width = 4;
+const int base_heigth = 4;
 // TODO: fix with real value
-const int nr_pixels = base_width * base_heigth * 2;
+// each channel is represented
+const int nr_pixels = 3 * base_width * base_heigth * 2;
 
+// TODO: fill pixels array in the correct way
 double *build_neighborhood(double *G, int L, int x, int y) {
     float *pixels = malloc(nr_pixels * sizeof(float*));
     // iterate the neighborhood
     for (int i, j; i,j < neighborhood_px; i++, j++) {
         pixels[i] = G[L + (x + i)];
     }
+    // upper neighborhood
+    if (L < sizeof(G)/(sizeof(float*) * 3)) {
+        for (int i, j; i, j < upper_neighborhood_px; i++, j++) {
+            return 0;
+        }
+    }
 }
-
 
 /*
 def build_neighborhood(G, L, x, y):
