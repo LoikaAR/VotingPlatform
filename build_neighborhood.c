@@ -54,3 +54,22 @@ double *build_neighborhood(double *G, int L, int x, int y) {
     return pixels;
 }
 
+double match_neighborhood(double *Na, double *Ns, int l) {
+    double res;
+    for (int i = 0; i < l; i++) {
+        res += Na[i] - Ns[i] * Na[i] - Ns[i];
+    }    
+    return res;
+}
+
+
+/*
+def build_neighborhood(G, L, x, y):
+    pixels = []
+    for i, j in neighborhood:
+        pixels.append(G[L][(x + i) % G[L].shape[0], (y + j) % G[L].shape[1]])
+    if L < len(G) - 1:
+        for i, j in upper_neighborhood:
+            pixels.append(G[L + 1][(x // 2 + i) % G[L + 1].shape[0], (y // 2 + j) % G[L + 1].shape[1]])
+    return np.array(pixels)
+*/
