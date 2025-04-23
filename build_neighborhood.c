@@ -57,7 +57,7 @@ double *build_neighborhood(double *G, int L, int x, int y) {
 double match_neighborhood(double *Na, double *Ns, int l) {
     double res;
     for (int i = 0; i < l; i++) {
-        res += Na[i] - Ns[i] * Na[i] - Ns[i];
+        res += (Na[i] - Ns[i]) * (Na[i] - Ns[i]);
     }    
     return res;
 }
