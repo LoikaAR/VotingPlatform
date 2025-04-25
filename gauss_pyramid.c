@@ -4,7 +4,7 @@
 #include "gauss_filter.h"
 
 int main(){
-    FILE* fp = fopen("./img/colorP3File.ppm", "r");
+    FILE* fp = fopen("./img/cameraman_p3.ppm", "r");
     char header[3];
     int width, height, max_color; // max_color = #channels?
     fscanf(fp,"%s", header);
@@ -20,29 +20,47 @@ int main(){
     }
 
     int pixels[height][width][3];
+    int out[height][width][3];
+
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             for (int k = 0; k < 3; k++) {
                 fscanf(fp, "%d", &pixels[i][j][k]);
+                out[i][j][k] = 0;
             }
         }
     }
 
     fclose(fp); // close input file
-
     // at this point the image is in pixels array - very cool
-    // processing
+    // apply gauss filter
+    double** kernel = make_gauss_kernel();
+    int kr = kernel_size/2;
+
+
     for (int i = 0; i < height; i++) {
+        printf("row %d\n", i);
         for (int j = 0; j < width; j++) {
             for (int k = 0; k < 3; k++) {
-                pixels[i][j][k] += 5;
+
+                double sum = 0.0;
+                for (int ik = -kr; ik <= kr; ik++) {
+                    for (int jk = -kr; jk <= kr; jk++) {
+                        int ni = i + ik;
+                        int nj = j + jk;
+ 
+                        if (ni >= 0 && ni < height && nj >= 0 && nj < width) { // zero-padded
+                            sum += kernel[ik + kr][jk + kr] * pixels[ni][nj][k];
+                        }
+                    }
+                }
+
+                // printf("setting %d %d %d\n", i, j, k);
+                out[i][j][k] = (int)sum;
             }
         }
     }
-
-
-    double** kernel = make_gauss_kernel();
 
 
     // save into new file
@@ -54,7 +72,7 @@ int main(){
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             for (int k = 0; k < 3; k++) {
-                fprintf(out_f, "%d ", pixels[i][j][k]);
+                fprintf(out_f, "%d ", out[i][j][k]);
             }
         }
         fprintf(out_f, "\n");

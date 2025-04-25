@@ -3,12 +3,8 @@
 #include <math.h>
 #include "gauss_filter.h"
 
-#define kernel_size 5
-#define sigma 1.0
-#define PI 3.1415926535
-
 double** make_gauss_kernel() {
-    double *data = (double*)malloc(kernel_size*kernel_size*sizeof(double));
+    double *data = (double*)calloc(kernel_size*kernel_size, sizeof(double)); // some 0s
     double **kernel = (double**)malloc(kernel_size*sizeof(double*));
 
     double sum = 0.0;
@@ -34,6 +30,7 @@ double** make_gauss_kernel() {
 
 // int main() {
 //     double **k = make_gauss_kernel();
+
 //     for (int i = 0; i < kernel_size; i++) {
 //         for (int j = 0; j < kernel_size; j++) {
 //             printf("%f ", k[i][j]);
