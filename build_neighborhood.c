@@ -24,9 +24,9 @@ double *build_neighborhood(double *G, int L, int x, int y) {
     int offset;
     int width, heigth;
 
-    float *pixels = malloc(nr_pixels * sizeof(float*));
+    double *pixels = malloc(nr_pixels * sizeof(double*));
     // iterate the neighborhood
-    for (int i, j; i,j < neighborhood_px; i+=3, j+=3) {
+    for (int i = 0, j = 0; i, j < neighborhood_px; i+=3, j+=3) {
         // Check: rgb encoding?
         // row index
         int xi = (x + i) % width;
@@ -38,7 +38,7 @@ double *build_neighborhood(double *G, int L, int x, int y) {
         pixels[i+2] = G[offset + xi + width * yi + 2];
     }
     // upper neighborhood
-    if (L < sizeof(G)/(sizeof(float*) * 3)) {
+    if (L < sizeof(G)/(sizeof(double*) * 3)) {
         for (int i, j; i, j < upper_neighborhood_px; i+=3, j+=3) {
             // Check: rgb encoding?
             // row index
@@ -73,4 +73,11 @@ def build_neighborhood(G, L, x, y):
         for i, j in upper_neighborhood:
             pixels.append(G[L + 1][(x // 2 + i) % G[L + 1].shape[0], (y // 2 + j) % G[L + 1].shape[1]])
     return np.array(pixels)
+*/
+
+/*
+int x, y
+int L
+int rgb_clamp
+double *Image
 */
