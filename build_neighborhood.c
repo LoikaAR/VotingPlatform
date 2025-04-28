@@ -17,6 +17,20 @@ const int base_heigth = 4;
 // each channel is represented
 const int nr_pixels = 3 * base_width * base_heigth * 2;
 
+// neighborhood contains pixel's relative 
+// coordinates respective to actual pixel
+int neighborhood[][2] = {
+    {-2, -2}, {-2, -1}, {-2, 0}, {-2, 1},
+    {-1, -2}, {-1, -1}, {-1, 0}, {-1, 1}, {-1, 2},
+     {0, -2}, {0, -1}
+};
+
+int upper_neighborhood[][2] = {
+    {-1, -1}, {-1, 0}, {-1, 1},
+     {0, -1}, {0, 0},  {0, 1},
+     {1, -1}, {1, 0},  {1, 1}
+};
+
 // TODO: fill pixels array in the correct way
 double *build_neighborhood(double *G, int L, int x, int y) {
     // those values change for each level
@@ -24,7 +38,10 @@ double *build_neighborhood(double *G, int L, int x, int y) {
     int offset;
     int width, heigth;
 
-    double *pixels = malloc(nr_pixels * sizeof(double*));
+    int num_pixels = (sizeof(neighborhood)/sizeof(neighborhood[0]) 
+        + sizeof(upper_neighborhood)/sizeof(upper_neighborhood[0])) * 3;
+    double *pixels = malloc(num_pixels * sizeof(double));
+    
     // iterate the neighborhood
     for (int i = 0, j = 0; i, j < neighborhood_px; i+=3, j+=3) {
         // Check: rgb encoding?
