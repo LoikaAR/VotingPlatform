@@ -3,6 +3,10 @@
 #include <math.h>
 #include "build_neighborhood.h"
 
+#define BASE_WIDTH 4
+#define BASE_HEIGHT 4
+#define MAX_LEVELS 4
+
 // is it a constant?
 // to add meaningful numbers
 // understand x, y values and neighborhood dimension
@@ -10,12 +14,9 @@
 // TODO: right values for constants
 const int neighborhood_px = 100;
 const int upper_neighborhood_px = 50;
-const int num_levels = 4;
-const int base_width = 4;
-const int base_heigth = 4;
 // TODO: fix with real value
 // each channel is represented
-const int nr_pixels = 3 * base_width * base_heigth * 2;
+const int nr_pixels = 3 * BASE_WIDTH * BASE_HEIGHT * 2;
 
 // neighborhood contains pixel's relative 
 // coordinates respective to actual pixel
@@ -31,15 +32,30 @@ int upper_neighborhood[][2] = {
      {1, -1}, {1, 0},  {1, 1}
 };
 
+// Get width and height of level L
+int get_width(int L) { return BASE_WIDTH >> L; }
+int get_height(int L) { return BASE_HEIGHT >> L; }
+
+// Get offset (in pixels) to level L
+int get_offset(int L) {
+    int offset = 0;
+    for (int i = 0; i < L; i++) {
+        offset += get_width(i) * get_height(i) * 3;
+    }
+    return offset;
+}
+
 // TODO: fill pixels array in the correct way
 double *build_neighborhood(double *G, int L, int x, int y) {
     // those values change for each level
     // TODO: calculate offset for each level, width and heigth
-    int offset;
-    int width, heigth;
+    int width = get_width(L);
+    int height = get_height(L);
+    int offset = get_offset(L);
 
     int num_pixels = (sizeof(neighborhood)/sizeof(neighborhood[0]) 
         + sizeof(upper_neighborhood)/sizeof(upper_neighborhood[0])) * 3;
+        
     double *pixels = malloc(num_pixels * sizeof(double));
     
     // iterate the neighborhood
@@ -48,7 +64,7 @@ double *build_neighborhood(double *G, int L, int x, int y) {
         // row index
         int xi = (x + i) % width;
         // column index
-        int yi = (y + j) % heigth;
+        int yi = (y + j) % height;
         // append right pixel (3 channels) to the pixels array
         pixels[i] = G[offset + xi + width * yi];
         pixels[i+1] = G[offset + xi + width * yi + 1];
@@ -61,7 +77,7 @@ double *build_neighborhood(double *G, int L, int x, int y) {
             // row index
             int xi = (x / 2 + i) % width;
             // column index
-            int yi = (y / 2 + j) % heigth;
+            int yi = (y / 2 + j) % height;
             // append right pixel (3 channels) to the pixels array
             pixels[i] = G[offset + xi + width * yi];
             pixels[i+1] = G[offset + xi + width * yi + 1];
