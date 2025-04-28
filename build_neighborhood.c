@@ -12,24 +12,25 @@
 // understand x, y values and neighborhood dimension
 // L is the level of the image of the gaussian filter
 // TODO: right values for constants
-const int neighborhood_px = 100;
-const int upper_neighborhood_px = 50;
+const int neighborhood_size = 11;
+const int upper_neighborhood_size = 9;
 // TODO: fix with real value
 // each channel is represented
 const int nr_pixels = 3 * BASE_WIDTH * BASE_HEIGHT * 2;
 
 // neighborhood contains pixel's relative 
 // coordinates respective to actual pixel
+// here counting the 3 channels too
 int neighborhood[][2] = {
-    {-2, -2}, {-2, -1}, {-2, 0}, {-2, 1},
-    {-1, -2}, {-1, -1}, {-1, 0}, {-1, 1}, {-1, 2},
-     {0, -2}, {0, -1}
+    {-6, -6}, {-6, -3}, {-6, 0}, {-6, 3},
+    {-3, -6}, {-3, -3}, {-3, 0}, {-3, 3}, {-3, 6},
+     {0, -6}, {0, -3}
 };
 
 int upper_neighborhood[][2] = {
-    {-1, -1}, {-1, 0}, {-1, 1},
-     {0, -1}, {0, 0},  {0, 1},
-     {1, -1}, {1, 0},  {1, 1}
+    {-3, -3}, {-3, 0}, {-3, 3},
+     {0, -3}, {0, 0},  {0, 3},
+     {3, -3}, {3, 0},  {3, 3}
 };
 
 // Get width and height of level L
@@ -59,7 +60,12 @@ double *build_neighborhood(double *G, int L, int x, int y) {
     double *pixels = malloc(num_pixels * sizeof(double));
     
     // iterate the neighborhood
-    for (int i = 0, j = 0; i, j < neighborhood_px; i+=3, j+=3) {
+    // change loop
+    int i = neighborhood[0][0];
+    int j = neighborhood[0][1];
+    int max_iterations = i + 3 * neighborhood_size;
+
+    for (int i; i < max_iterations; i+=3, j+=3) {
         // Check: rgb encoding?
         // row index
         int xi = (x + i) % width;
@@ -72,7 +78,7 @@ double *build_neighborhood(double *G, int L, int x, int y) {
     }
     // upper neighborhood
     if (L < sizeof(G)/(sizeof(double*) * 3)) {
-        for (int i, j; i, j < upper_neighborhood_px; i+=3, j+=3) {
+        for (i, j; i < max_iterations; i+=3, j+=3) {
             // Check: rgb encoding?
             // row index
             int xi = (x / 2 + i) % width;
