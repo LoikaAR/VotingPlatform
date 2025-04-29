@@ -4,18 +4,18 @@
 #include "find_best_match.h"
 #include "build_neighborhood.h"
 
-double find_best_match(double *Ga, double *Gs, int L, int xs, int ys) {
+int find_best_match(int *Ga, int *Gs, int L, int xs, int ys) {
     // change each level
     int width;
     int heigth;
 
-    double *Ns = build_neighborhood(Gs, L, xs, ys);
-    double best_pixel;
+    int *Ns = build_neighborhood(Gs, L, xs, ys);
+    int best_pixel;
     int C = INFINITY;
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < heigth; y++) {
-            double *Na = build_neighborhood(Ga, L, x, y);
-            double C_new = match_neighborhood(Na, Ns);
+            int *Na = build_neighborhood(Ga, L, x, y);
+            int C_new = match_neighborhood(Na, Ns, L);
 
             if (C_new < C) {
                 C = C_new;
@@ -25,3 +25,5 @@ double find_best_match(double *Ga, double *Gs, int L, int xs, int ys) {
     }
     return best_pixel;
 }
+
+int main() {}

@@ -1,5 +1,5 @@
 #include <stdio.h>
 
-double *build_neighborhood(double *G, int L, int x, int y);
+int *build_neighborhood(int *G, int L, int x, int y);
 
-double match_neighborhood(double *Na, double *Ns, int l);
+int match_neighborhood(int *Na, int *Ns, int l);
