@@ -67,6 +67,10 @@ double *build_neighborhood(double *G, int L, int x, int y) {
     for (i; i < max_iterations; i+=3, j+=3) {
         // Check: rgb encoding?
         // index assigning
+        // not going out of bound
+        if (i - x < 0) continue;
+        if (j - y < 0) continue;
+
         int xi = (x + i) % width;
         int yi = (y + j) % height;
         int index = (xi + width * yi) * 3;
@@ -80,6 +84,9 @@ double *build_neighborhood(double *G, int L, int x, int y) {
         for (i, j; i < max_iterations; i+=3, j+=3) {
             // Check: rgb encoding?
             // row indexes
+            if (i - x < 0) continue;
+            if (j - y < 0) continue;
+
             int xi = (x / 2 + i) % width;
             int yi = (y / 2 + j) % height;
             int index = (xi + width * yi) * 3;
