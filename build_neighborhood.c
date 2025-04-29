@@ -2,28 +2,32 @@
 #include <stdio.h>
 #include <math.h>
 #include "build_neighborhood.h"
-#include "image_struct.h"
 
+// TODO: Determine values
 #define BASE_WIDTH 4
 #define BASE_HEIGHT 4
 #define MAX_LEVELS 4
 
-// is it a constant?
-// to add meaningful numbers
-// understand x, y values and neighborhood dimension
-// L is the level of the image of the gaussian filter
-// TODO: right values for constants
-const int neighborhood_size = 11;
-const int upper_neighborhood_size = 9;
-// TODO: fix with real value
-// each channel is represented
-const int nr_pixels = 3 * BASE_WIDTH * BASE_HEIGHT * 2;
+// neighborhood contains pixel's relative 
+// coordinates respective to actual pixel
+// here counting the 3 channels too
+int neighborhood[][2] = {
+    {-6, -6}, {-6, -3}, {-6, 0}, {-6, 3},
+    {-3, -6}, {-3, -3}, {-3, 0}, {-3, 3}, 
+    {-3, 6}, {0, -6}, {0, -3}
+};
 
-// Get width and height of level L
+int upper_neighborhood[][2] = {
+    {-3, -3}, {-3, 0}, {-3, 3},
+    {0, -3}, {0, 0},  {0, 3},
+    {3, -3}, {3, 0},  {3, 3}
+};
+
+// Get size of level L
 int get_width(int L) { return BASE_WIDTH >> L; }
 int get_height(int L) { return BASE_HEIGHT >> L; }
 
-// Get offset (in pixels) to level L
+// Get offset to level L
 int get_offset(int L) {
     int offset = 0;
     for (int i = 0; i < L; i++) {
@@ -32,73 +36,83 @@ int get_offset(int L) {
     return offset;
 }
 
-// TODO: fill pixels array in the correct way
-int *build_neighborhood(int *G, int L, int x, int y) {
-    // those values change for each level
-    int width = get_width(L);
-    int height = get_height(L);
+/**
+ * @brief Builds neighborhood of pixel (x, y) at given level in a Gaussian pyramid.
+ *
+ * This function returns the neighborhood of a specific pixel at level L in the pyramid, 
+ * including the pixel's neighbors at the current level and possibly at an upper pyramid level.
+ * 
+ * @param G Pointer to a 1D array representing graph.
+ * @param L The level of the image to build the neighborhood for.
+ * @param x The x-coordinate of the pixel at level L.
+ * @param y The y-coordinate of the pixel at level L.
+ * 
+ * @return Pointer to an array of RGB pixel values representing the neighborhood of pixel (x, y).
+ *         Includes values from both the current and upper levels (if applicable).
+ */
+double *build_neighborhood(double *G, int L, int x, int y) {
+    // Offset into G of image level L
     int offset = get_offset(L);
 
-    // total ints for 11 pixels in neighborhood
-    // and 9 pixels in upper neighborhood
-    int neighborhood[11][2] = {
-        {-6, -6}, {-6, -3}, {-6, 0}, {-6, 3},
-        {-3, -6}, {-3, -3}, {-3, 0}, {-3, 3}, {-3, 6},
-        {0, -6}, {0, -3}
-    };
+    // Get size of image at level L
+    int width = get_width(L);
+    int height = get_height(L);
 
-    int upper_neighborhood[9][2] = {
-        {-3, -3}, {-3, 0}, {-3, 3},
-        {0, -3}, {0, 0},  {0, 3},
-        {3, -3}, {3, 0},  {3, 3}
-    };
+    // Number of coordinate pairs of neighborhood arrays
+    int neigh_count = sizeof(neighborhood) / sizeof(neighborhood[0]);
+    int upper_neigh_count = sizeof(upper_neighborhood) / sizeof(upper_neighborhood[0]);
 
-    int num_pixels = 60;    
-    int *pixels = malloc(num_pixels * sizeof(int));
+    int pixel_count = (neigh_count + upper_neigh_count) * 3;
+        
+    double *pixels = malloc(pixel_count * sizeof(double));
 
-    // iterate the neighborhood
-    // change loop
-    int max_iterations = 3 * neighborhood_size;
+    int idx = 0;
 
-    for (int i = 0; i < max_iterations; i+=3) {
-        int dx = neighborhood[i][0];
-        int dy = neighborhood[i][1];
-        if (x + dx < 0 || y + dy < 0) continue;
+    // Current level neighborhood
+    for (int i = 0; i < neigh_count; i++) {
+        int dx = neighborhood[i][0]; // Horizontal offset
+        int dy = neighborhood[i][1]; // Vertical offset
 
-        int xi = (x + dx) % width;
-        int yi = (y + dy) % height;
-        int index = (xi + width * yi) * 3;
-        // append right pixel (3 channels) to the pixels array
-        pixels[i] = G[offset + index];
-        pixels[i+1] = G[offset + index + 1];
-        pixels[i+2] = G[offset + index + 2];
+        // Toroidal coordinates (wrap-around bound)
+        int x_i = (x + dx + width) % width;
+        int y_i = (y + dy + height) % height;
+
+        // 2d coord to 1d index
+        int index = (x_i + width * y_i) * 3;
+
+        // Append RGB to pixels array
+        pixels[idx++] = G[offset + index];     // Red
+        pixels[idx++] = G[offset + index + 1]; // Green
+        pixels[idx++] = G[offset + index + 2]; // Blue
     }
-    // upper neighborhood
-    if (L < MAX_LEVELS - 1) {
-        int max_iterations = 3 * upper_neighborhood_size;
-        // informations for upper levels
-        int up_width = get_width(L + 1);
-        int up_height = get_height(L + 1);
-        int up_offset = get_offset(L + 1);
-        for (int i = 0; i < max_iterations; i+=3) {
-            // Check: rgb encoding?
-            // row indexes
-            int dx = upper_neighborhood[i][0];
-            int dy = upper_neighborhood[i][1];
-            if (x + dx < 0 || y + dy < 0) continue;
 
-            int xi = (x / 2 + dx) % up_width;
-            int yi = (y / 2 + dy) % up_height;
-            int index = (xi + up_width * yi) * 3;
-            // append right pixel (3 channels) to the pixels array
-            pixels[i] = G[up_offset + index];
-            pixels[i+1] = G[up_offset + index + 1];
-            pixels[i+2] = G[up_offset + index + 2];
+    // Upper level neighborhood
+    if (L < MAX_LEVELS - 1) {
+        int upper_offset = get_offset(L + 1);
+        int upper_width = get_width(L + 1);
+        int upper_height = get_height(L + 1);
+
+        for (int i = 0; i < upper_neigh_count; i++) {
+            int dx = neighborhood[i][0]; // Horizontal offset
+            int dy = neighborhood[i][1]; // Vertical offset
+
+            // Downsample by factor of 2 to convert to parent level
+            int x_i = (x / 2 + dx + upper_width) % upper_width;
+            int y_i = (y / 2 + dy + upper_height) % upper_height;
+
+            // 1d index to RGB
+            int index = (x_i + upper_width * y_i) * 3;
+
+            // Append RGB (from parent L) to pixels array
+            pixels[idx++] = G[offset + index];     // Red
+            pixels[idx++] = G[offset + index + 1]; // Green
+            pixels[idx++] = G[offset + index + 2]; // Blue
         }
     }
 
     return pixels;
 }
+
 
 int match_neighborhood(int *Na, int *Ns, int l) {
     int res = 0;
