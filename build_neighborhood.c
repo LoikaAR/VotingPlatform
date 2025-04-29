@@ -64,7 +64,7 @@ double *build_neighborhood(double *G, int L, int x, int y) {
     int j = neighborhood[0][1];
     int max_iterations = i + 3 * neighborhood_size;
 
-    for (i; i < max_iterations; i+=3, j+=3) {
+    for (; i < max_iterations; i+=3, j+=3) {
         // Check: rgb encoding?
         // index assigning
         // not going out of bound
@@ -81,7 +81,7 @@ double *build_neighborhood(double *G, int L, int x, int y) {
     }
     // upper neighborhood
     if (L < sizeof(G)/(sizeof(double*) * 3)) {
-        for (i, j; i < max_iterations; i+=3, j+=3) {
+        for (; i < max_iterations; i+=3, j+=3) {
             // Check: rgb encoding?
             // row indexes
             if (i - x < 0) continue;
