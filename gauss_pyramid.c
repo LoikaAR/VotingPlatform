@@ -4,8 +4,7 @@
 #include <math.h>
 #include "gauss_filter.h"
 #include "image_struct.h"
-
-#define NUM_LEVELS 4 // lvls of the gauss pyramid (including original)
+#include "gauss_pyramid.h"
 
 // take every 2nd pixel
 struct Image subsample(int height, int width, int colors, 
@@ -46,44 +45,11 @@ struct Image im_gauss_filt(double** kernel, int height, int width, int colors, i
     return pixels_out;
 }
 
-
-int main() {
-    struct Image img;
-
-    FILE* fp = fopen("./img/cameraman_p3.ppm", "r");
-    char header[3];
-    int width, height, max_color;
-    fscanf(fp,"%s", header);             // ppm header, rn works for P3 only
-    fscanf(fp, "%d %d", &img.x, &img.y); // x = width, y = height
-    fscanf(fp, "%d", &img.rgb_clamp);    // max rgb value
-    img.L = 3;                           // number of color channels, does not change
-
-    // check header format for color images
-    if (header[0] != 'P' || header[1] != '3') {
-        printf("Invalid file format.\n");
-        printf("Header = %s\n", header);
-        return 1;
-    }
-
-    img.pixels = (int*)malloc(img.x*img.y*img.L*sizeof(int));
-    int pixels[height][width][3];
-    // int ***out = (int***)malloc(height*width*3*sizeof(int));
-
-    // place image into img struct
-    for (int i = 0; i < img.y; i++) {
-        for (int j = 0; j < img.x; j++) {
-            for (int k = 0; k < img.L; k++) {
-                fscanf(fp, "%d", &(img.pixels[(i*img.x*img.L) + (j*img.L) + k]));
-            }
-        }
-    }
-    fclose(fp); // close input file
-
-
-    // at this point the image is only in pixels array
+struct Image* build_gauss_pyramid(struct Image img) {
     double** kernel = make_gauss_kernel();
     int kr = kernel_size/2;
-    struct Image gauss_pyramid[NUM_LEVELS]; 
+    // struct Image gauss_pyramid[NUM_LEVELS]; 
+    struct Image* gauss_pyramid = malloc(NUM_LEVELS * sizeof(struct Image));
 
     // 0th level of pyramid = original image
     gauss_pyramid[0].pixels = (int*)malloc(img.x*img.y*img.L*sizeof(int)); 
@@ -104,10 +70,15 @@ int main() {
         gauss_pyramid[p].rgb_clamp = gauss_pyramid[p-1].rgb_clamp;
         gauss_pyramid[p].pixels = (int*)malloc(img.x*img.y*img.L*sizeof(int));
 
+        prev_height = gauss_pyramid[p-1].y;
+        prev_width = gauss_pyramid[p-1].x;
+        cur_height = gauss_pyramid[p].y;
+        cur_width = gauss_pyramid[p].x;
+
         // apply gauss filter and subsample
         gauss_pyramid[p] = im_gauss_filt(kernel, img.y, img.x, img.L, kr, gauss_pyramid[p-1], gauss_pyramid[p]);
         gauss_pyramid[p] = subsample(img.y, img.x, img.L, gauss_pyramid[p], gauss_pyramid[p]);
-    
+        
         // save into new file
         char *filename;
         char s1[3];
@@ -141,4 +112,38 @@ int main() {
         }
         fclose(out_f); // close file
     }
+    return gauss_pyramid;
 }
+
+// int main() {
+//     struct Image img;
+//     char* image_path = "./img/sub_file.ppm";
+//     FILE* fp = fopen(image_path, "r");
+//     char header[3];
+//     int width, height, max_color;
+//     fscanf(fp,"%s", header);             // ppm header, rn works for P3 only
+//     fscanf(fp, "%d %d", &img.x, &img.y); // x = width, y = height
+//     fscanf(fp, "%d", &img.rgb_clamp);    // max rgb value
+//     img.L = 3;                           // number of color channels, does not change
+
+//     // check header format for color images
+//     if (header[0] != 'P' || header[1] != '3') {
+//         printf("Invalid file format.\n");
+//         printf("Header = %s\n", header);
+//         return 1;
+//     }
+
+//     img.pixels = (int*)malloc(img.x*img.y*img.L*sizeof(int));
+
+//     // place image into img struct
+//     for (int i = 0; i < img.y; i++) {
+//         for (int j = 0; j < img.x; j++) {
+//             for (int k = 0; k < img.L; k++) {
+//                 fscanf(fp, "%d", &(img.pixels[(i*img.x*img.L) + (j*img.L) + k]));
+//             }
+//         }
+//     }
+//     fclose(fp); // close input file
+
+//     struct Image* gauss_pyramid = build_gauss_pyramid(img);
+// }
