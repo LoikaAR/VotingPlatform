@@ -25,5 +25,3 @@ int find_best_match(struct Image *Ga, struct Image *Gs, int L, int xs, int ys) {
     }
     return best_pixel;
 }
-
-int main() {}

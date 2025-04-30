@@ -26,6 +26,7 @@ int *texture_synthesis(int *Ia, int output_size, int pyramid_levels) {
         }
     }
     return Gs[0].pixels;
+
 }
 
 int main() {}
