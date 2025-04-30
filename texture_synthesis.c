@@ -4,10 +4,10 @@
 #include "image_struct.h"
 #include "find_best_match.h"
 
-int *texture_synthesis(int *Ia, int outputSize, int pyramidLevels) {
+int *texture_synthesis(int *Ia, int output_size, int pyramid_levels) {
     // initialize image with random noise
     srand(0);
-    int arraySize = 3 * outputSize * outputSize;
+    int arraySize = 3 * output_size * output_size;
     int *Is = (int*)malloc(arraySize * sizeof(int));
     int i;
     for (i = 0; i < arraySize; i++) {
@@ -17,7 +17,7 @@ int *texture_synthesis(int *Ia, int outputSize, int pyramidLevels) {
     struct Image *Gs; // Is
     struct Image *Ga; // Ia
 
-    for (int l = pyramidLevels - 1; l >= 0; l--) {
+    for (int l = pyramid_levels - 1; l >= 0; l--) {
         for (int i = 0; i < Gs[l].x; i++) {
             for (int j = 0; j < Gs[l].y; j++) {
                 int best_match = find_best_match(Ga, Gs, l, i, j);
