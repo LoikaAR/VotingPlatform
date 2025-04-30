@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "build_neighborhood.h"
-#include "image_struct.h"
+#include "image.h"
 
 // TODO: Determine values
 #define BASE_WIDTH 4
@@ -38,7 +38,7 @@ int upper_neighborhood[][2] = {
  * @return Pointer to an array of RGB pixel values representing the neighborhood of pixel (x, y).
  *         Includes values from both the current and upper levels (if applicable).
  */
-double *build_neighborhood(struct Image *G, int L, int x, int y) {
+double *build_neighborhood(Image *G, int L, int x, int y) {
     // Number of coordinate pairs of neighborhood arrays
     int neigh_count = sizeof(neighborhood) / sizeof(neighborhood[0]);
     int upper_neigh_count = sizeof(upper_neighborhood) / sizeof(upper_neighborhood[0]);
@@ -55,16 +55,16 @@ double *build_neighborhood(struct Image *G, int L, int x, int y) {
         int dy = neighborhood[i][1]; // Vertical offset
 
         // Toroidal coordinates (wrap-around bound)
-        int x_i = (x + dx + G[L].x) % G[L].x;
-        int y_i = (y + dy + G[L].y) % G[L].y;
+        int x_i = (x + dx + G[L].width) % G[L].width;
+        int y_i = (y + dy + G[L].height) % G[L].height;
 
         // 2d coord to 1d index
-        int index = (x_i + G[L].x * y_i) * 3;
+        int index = (x_i + G[L].width * y_i) * 3;
 
         // Append RGB to pixels array
-        pixels[idx++] = G[L].pixels[index];     // Red
-        pixels[idx++] = G[L].pixels[index + 1]; // Green
-        pixels[idx++] = G[L].pixels[index + 2]; // Blue
+        pixels[idx++] = G[L].data[index];     // Red
+        pixels[idx++] = G[L].data[index + 1]; // Green
+        pixels[idx++] = G[L].data[index + 2]; // Blue
     }
 
     // Upper level neighborhood
@@ -74,16 +74,16 @@ double *build_neighborhood(struct Image *G, int L, int x, int y) {
             int dy = neighborhood[i][1]; // Vertical offset
 
             // Downsample by factor of 2 to convert to parent level
-            int x_i = (x / 2 + dx + G[L + 1].x) % G[L + 1].x;
-            int y_i = (y / 2 + dy + G[L + 1].y) % G[L + 1].y;
+            int x_i = (x / 2 + dx + G[L + 1].width) % G[L + 1].width;
+            int y_i = (y / 2 + dy + G[L + 1].height) % G[L + 1].height;
 
             // 1d index to RGB
-            int index = (x_i + G[L + 1].x * y_i) * 3;
+            int index = (x_i + G[L + 1].width * y_i) * 3;
 
             // Append RGB (from parent L) to pixels array
-            pixels[idx++] = G[L + 1].pixels[index];     // Red
-            pixels[idx++] = G[L + 1].pixels[index + 1]; // Green
-            pixels[idx++] = G[L + 1].pixels[index + 2]; // Blue
+            pixels[idx++] = G[L + 1].data[index];     // Red
+            pixels[idx++] = G[L + 1].data[index + 1]; // Green
+            pixels[idx++] = G[L + 1].data[index + 2]; // Blue
         }
     }
 

@@ -16,7 +16,7 @@ void subsample(int old_height, int old_width, int new_height, int new_width, int
     }
 }
 
-int main() {
+int _main() {
     // delete out_file if it exists
     const char *file = "./img/sub_file.ppm";
 

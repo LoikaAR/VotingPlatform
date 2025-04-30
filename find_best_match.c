@@ -3,8 +3,9 @@
 #include <math.h>
 #include "find_best_match.h"
 #include "build_neighborhood.h"
+#include "image.h"
 
-int find_best_match(struct Image *Ga, struct Image *Gs, int L, int xs, int ys) {
+int find_best_match(Image *Ga, Image *Gs, int L, int xs, int ys) {
     // change each level
     int width;
     int heigth;
