@@ -90,10 +90,10 @@ Image* build_gauss_pyramid(Image img) {
         cur_width = gauss_pyramid[p].width;
 
         // apply gauss filter and subsample
-        // gauss_pyramid[p] = im_gauss_filt(kernel, img.height, img.width,
-        // img.channels, kr, gauss_pyramid[p-1], gauss_pyramid[p]);
+        gauss_pyramid[p] = im_gauss_filt(kernel, img.height, img.width,
+        img.channels, kr, gauss_pyramid[p-1], gauss_pyramid[p]);
         gauss_pyramid[p] = subsample(img.height, img.width, img.channels,
-                                     gauss_pyramid[p - 1], gauss_pyramid[p]);
+                                     gauss_pyramid[p], gauss_pyramid[p]);
 
         // save into new file
         char* filename;
