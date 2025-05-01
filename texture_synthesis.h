@@ -1,3 +1,4 @@
 #include <stdio.h>
+#include "image.h"
 
-int *texture_synthesis(int *Ia, int outputSize, int pyramidLevels) {}
+double *texture_synthesis(Image Ia, int output_size, int pyramid_levels);

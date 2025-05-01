@@ -5,7 +5,7 @@
 #include "find_best_match.h"
 #include "gauss_pyramid.h"
 
-int *texture_synthesis(Image Ia, int output_size, int pyramid_levels) {
+double *texture_synthesis(Image Ia, int output_size, int pyramid_levels) {
     srand(0);
     int arraySize = 3 * output_size * output_size;
     // initialize image with random noise
@@ -13,7 +13,7 @@ int *texture_synthesis(Image Ia, int output_size, int pyramid_levels) {
     Is.width = output_size;
     Is.height = output_size;
     Is.maxval = Ia.maxval;
-    Is.data = (int*)malloc(arraySize * sizeof(int));
+    Is.data = (double*)malloc(arraySize * sizeof(double));
 
     for (int i = 0; i < arraySize; i++) {
         Is.data[i] = rand() % 255;
@@ -33,3 +33,5 @@ int *texture_synthesis(Image Ia, int output_size, int pyramid_levels) {
     return Gs[0].data;
 
 }
+
+int main() {}
