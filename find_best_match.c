@@ -13,7 +13,7 @@ int find_best_match(Image *Ga, Image *Gs, int L, int xs, int ys) {
 
     double *Ns = build_neighborhood(Gs, L, xs, ys);
     int best_pixel;
-    int C = INFINITY;
+    int C = __INT16_MAX__; // changed from INFINITY
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < heigth; y++) {
             double *Na = build_neighborhood(Ga, L, x, y);
@@ -25,6 +25,6 @@ int find_best_match(Image *Ga, Image *Gs, int L, int xs, int ys) {
             }
         }
     }
-    printf("%f best pixel\n", best_pixel);
+    // printf("%d best pixel\n", best_pixel);
     return best_pixel;
 }

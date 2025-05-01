@@ -78,13 +78,14 @@ Image *build_gauss_pyramid(Image img) {
         cur_width = gauss_pyramid[p].width;
 
         // apply gauss filter and subsample
-        gauss_pyramid[p] = im_gauss_filt(kernel, img.height, img.width, img.channels, kr, gauss_pyramid[p-1], gauss_pyramid[p]);
-        gauss_pyramid[p] = subsample(img.height, img.width, img.channels, gauss_pyramid[p], gauss_pyramid[p]);
+        // gauss_pyramid[p] = im_gauss_filt(kernel, img.height, img.width, img.channels, kr, gauss_pyramid[p-1], gauss_pyramid[p]);
+        gauss_pyramid[p] = subsample(img.height, img.width, img.channels, gauss_pyramid[p-1], gauss_pyramid[p]);
         
         // save into new file
         char *filename;
         char s1[3];
         sprintf(s1, "%d", p);
+        // char* id = &img;
         char *s0 = "./img/pyramid_lvl_";
         char *s2 = "_file.ppm";
 
@@ -117,9 +118,9 @@ Image *build_gauss_pyramid(Image img) {
     return gauss_pyramid;
 }
 
-int main_fun() {
+int _main() {
     struct Image img;
-    char* image_path = "./img/rand_noise.ppm";
+    char* image_path = "./img/texture_1.ppm";
     FILE* fp = fopen(image_path, "r");
     char header[3];
     int width, height, max_color;
