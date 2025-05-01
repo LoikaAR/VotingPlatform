@@ -89,7 +89,7 @@ int *build_neighborhood(Image *G, int L, int x, int y) {
     return pixels;
 }
 
-int match_neighborhood(double *Na, double *Ns, int l) {
+int match_neighborhood(int *Na, int *Ns, int l) {
     int res = 0;
     for (int i = 0; i < l; i++) {
         res += (Na[i] - Ns[i]) * (Na[i] - Ns[i]);
