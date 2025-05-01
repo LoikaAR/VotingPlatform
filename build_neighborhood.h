@@ -1,3 +1,4 @@
+#include "image.h"
 
 double *build_neighborhood(Image *G, int L, int x, int y);
 

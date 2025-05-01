@@ -70,8 +70,8 @@ double *build_neighborhood(Image *G, int L, int x, int y) {
     // Upper level neighborhood
     if (L < MAX_LEVELS - 1) {
         for (int i = 0; i < upper_neigh_count; i++) {
-            int dx = neighborhood[i][0]; // Horizontal offset
-            int dy = neighborhood[i][1]; // Vertical offset
+            int dx = upper_neighborhood[i][0]; // Horizontal offset
+            int dy = upper_neighborhood[i][1]; // Vertical offset
 
             // Downsample by factor of 2 to convert to parent level
             int x_i = (x / 2 + dx + G[L + 1].width) % G[L + 1].width;

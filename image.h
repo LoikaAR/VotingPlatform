@@ -2,7 +2,7 @@
 #define IMAGE_H
 
 // Structure to represent an image
-typedef struct {
+typedef struct Image {
     int width;    // Image width in px
     int height;   // Image height in px
     int channels; // Number of color channels (e.g. 1 = grayscale, 3 = RGB)
