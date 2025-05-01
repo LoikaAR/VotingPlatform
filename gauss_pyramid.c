@@ -52,7 +52,7 @@ Image *build_gauss_pyramid(Image img) {
     Image* gauss_pyramid = malloc(NUM_LEVELS * sizeof(Image));
 
     // 0th level of pyramid = original image
-    gauss_pyramid[0].data = (int*)malloc(img.width*img.height*img.channels*sizeof(int)); 
+    gauss_pyramid[0].data = (double*)malloc(img.width*img.height*img.channels*sizeof(double)); 
     memcpy(gauss_pyramid[0].data, img.data, img.width*img.height*img.channels*sizeof(int));
     gauss_pyramid[0].width = img.width;
     gauss_pyramid[0].height = img.height;
@@ -68,7 +68,7 @@ Image *build_gauss_pyramid(Image img) {
         gauss_pyramid[p].height = gauss_pyramid[p-1].height/2;
         gauss_pyramid[p].channels = gauss_pyramid[p-1].channels;
         gauss_pyramid[p].maxval = gauss_pyramid[p-1].maxval;
-        gauss_pyramid[p].data = (int*)malloc(img.width*img.height*img.channels*sizeof(int));
+        gauss_pyramid[p].data = (double*)malloc(img.width*img.height*img.channels*sizeof(double));
 
         prev_height = gauss_pyramid[p-1].height;
         prev_width = gauss_pyramid[p-1].width;
@@ -105,7 +105,7 @@ Image *build_gauss_pyramid(Image img) {
         for (int i = 0; i < cur_height; i++) {
             for (int j = 0; j < cur_width; j++) {
                 for (int k = 0; k < 3; k++) {
-                    fprintf(out_f, "%d ", gauss_pyramid[p].data[(i*img.width*img.channels) + (j*img.channels) + k]); // can replace img.L
+                    fprintf(out_f, "%f ", gauss_pyramid[p].data[(i*img.width*img.channels) + (j*img.channels) + k]); // can replace img.L
                 }
             }
             fprintf(out_f, "\n");

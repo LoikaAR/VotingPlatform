@@ -5,17 +5,17 @@
 #include "build_neighborhood.h"
 #include "image.h"
 
-int find_best_match(Image *Ga, Image *Gs, int L, int xs, int ys) {
+double find_best_match(Image *Ga, Image *Gs, int L, int xs, int ys) {
     // change each level
     int width;
     int heigth;
 
-    int *Ns = build_neighborhood(Gs, L, xs, ys);
-    int best_pixel;
+    double *Ns = build_neighborhood(Gs, L, xs, ys);
+    double best_pixel;
     int C = INFINITY;
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < heigth; y++) {
-            int *Na = build_neighborhood(Ga, L, x, y);
+            double *Na = build_neighborhood(Ga, L, x, y);
             int C_new = match_neighborhood(Na, Ns, L);
 
             if (C_new < C) {
