@@ -1,142 +1,84 @@
-#include <stdio.h>
 #include "texture_synthesis.h"
-#include "gauss_filter.h"
-#include "image.h"
+
+#include <stdio.h>
+
 #include "find_best_match.h"
+#include "gauss_filter.h"
 #include "gauss_pyramid.h"
+#include "image.h"
 
-Image texture_synthesis(Image Ia, int output_size, int pyramid_levels) {
-    srand(0);
-    int arraySize = 3 * output_size * output_size;
-    
-    // initialize image with random noise
-    Image Is;
-    Is.width = output_size;
-    Is.height = output_size; // assuming image is a square
-    Is.maxval = Ia.maxval;
-    Is.channels = 3;
-    Is.data = (int*)malloc(arraySize * sizeof(int));
+Image texture_synthesis(Image sample_img, int output_size, int pyramid_levels) {
+    /* 1. Initialize output image with random noise. */
+    srand(0);  // Set seed for reproducibility
+    int out_data_size = sample_img.channels * output_size * output_size;
 
+    // Initialize output image
+    Image output_img;
+    output_img.width = output_size;
+    output_img.height = output_size;  // assuming image is a square
+    output_img.maxval = sample_img.maxval;
+    output_img.channels = sample_img.channels;
+    output_img.data = (int *)malloc(out_data_size * sizeof(int));
+
+    // Fill with random noise
     for (int i = 0; i < output_size; i++) {
         for (int j = 0; j < output_size; j++) {
             for (int c = 0; c < 3; c++) {
-                Is.data[(i*output_size*Is.channels) + (j*Is.channels) + c] = rand() % 256;
+                int idx = (i * output_size * output_img.channels) +
+                          (j * output_img.channels) + c;
+                output_img.data[idx] = rand() % 256;  // TODO: Use clamp maxval
             }
         }
     }
 
-    // create the gaussian pyramids
-    printf("%zu Is \n", sizeof(Is));
-    printf("%zu Ia \n", sizeof(Ia));
-   
-    Image *Gs = build_gauss_pyramid(Is); // Is
-    printf("GP 1 done\n");
-    Image *Ga = build_gauss_pyramid(Ia); // Ia
-    printf("GP 2 done\n");
-    
+    save_ppm_image(output_img, "./img/out_origin.ppm");
+
+    /* 2. Build Gaussian pytamids for sample and output. */
+
+    printf("> sample_img (%d x %d)\n", sample_img.width, sample_img.height);
+    printf("> output_img (%d x %d)\n", output_img.width, output_img.height);
+
+    Image *output_pyr = build_gauss_pyramid(output_img);
+    printf("> Built output_pyramid\n");
+    Image *sample_pyr = build_gauss_pyramid(sample_img);
+    printf("> Built sample_pyramid\n");
+
+    /* Step 3: Texture synthesis by matching at each level. */
     for (int l = pyramid_levels - 1; l >= 0; l--) {
-        printf("Level %d\n", l);
-        for (int i = 0; i < Gs[l].height; i++) {
-            for (int j = 0; j < Gs[l].width; j++) {
-                int best_match = find_best_match(Ga, Gs, l, i, j);
-                int base_s = (i * Gs[l].width + j) * 3;
-                int base_a = best_match * 3;
-                Gs[l].data[base_s]     = Ga[l].data[base_a];
-                Gs[l].data[base_s + 1] = Ga[l].data[base_a + 1];
-                Gs[l].data[base_s + 2] = Ga[l].data[base_a + 2];
+        printf("Synthesizing at pyramid level %d...\n", l);
+
+        for (int y = 0; y < output_pyr[l].height; y++) {
+            for (int x = 0; x < output_pyr[l].width; x++) {
+                int best_match_idx =
+                    find_best_match(sample_pyr, output_pyr, l, y, x);
+
+                int output_base = (y * output_pyr[l].width + x) * 3;
+                int sample_base = best_match_idx * 3;
+
+                for (int c = 0; c < 3; c++) {
+                    output_pyr[l].data[output_base + c] =
+                        sample_pyr[l].data[sample_base + c];
+                }
             }
         }
 
-        FILE* out_fp = fopen("./img/output.ppm", "w");
-        
-        // Write the PPM header
-        fprintf(out_fp, "P3\n");
-        fprintf(out_fp, "%d %d\n", Gs[l].width, Gs[l].height); // New image dimensions
-        fprintf(out_fp, "255\n"); // Max color value (assuming 8-bit colors)
-
-        // Write pixel data (output array should be in RGB format)
-        for (int i = 0; i < Gs[l].height; i++) { // Output image height
-            for (int j = 0; j < Gs[l].width; j++) { // Output image width
-                int idx = (i * Gs[l].width * 3) + (j * 3); // Index for RGB values in the flat array
-                fprintf(out_fp, "%d %d %d",
-                        (Gs[l].data[idx]), 
-                        (Gs[l].data[idx + 1]), 
-                        (Gs[l].data[idx + 2]));
-            }
-            fprintf(out_fp, "\n");
-        }
-
-        fclose(out_fp); // Close the output file
-
+        char filename[64];
+        sprintf(filename, "./img/out_level_%d.ppm", l);
+        save_ppm_image(output_pyr[l], filename);
     }
-    return Gs[0];
+
+    return output_pyr[0];
 }
 
 int main() {
-    struct Image img;
-    char* image_path = "./img/texture_1.ppm";
-    FILE* fp = fopen(image_path, "r");
-    if (fp == NULL) {
-        perror("Error opening file");
-        return 1;
-    }
-    char header[3];
-    int width, height, max_color;
-    fscanf(fp,"%s", header);             // ppm header, rn works for P3 only
-    fscanf(fp, "%d %d", &img.width, &img.height); // x = width, y = height
-    fscanf(fp, "%d", &img.maxval);    // max rgb value
-    img.channels = 3;                           // number of color channels, does not change
-    // check header format for color images
-    if (header[0] != 'P' || header[1] != '3') {
-        printf("Invalid file format.\n");
-        printf("Header = %s\n", header);
-        return 1;
-    }
+    Image sample = load_ppm_image("./img/pebbles_64.ppm");
 
-    img.data = (int*)malloc(img.width*img.height*img.channels*sizeof(int));
-    // place image into img struct
-    for (int i = 0; i < img.height; i++) {
-        for (int j = 0; j < img.width; j++) {
-            for (int k = 0; k < img.channels; k++) {
-                fscanf(fp, "%d", &(img.data[(i*img.width*img.channels) + (j*img.channels) + k]));
-            }
-        }
-    }
-    fclose(fp); // close input file
+    Image Gs = texture_synthesis(sample, 128, 3);
 
-    Image Gs = texture_synthesis(img, 512, NUM_LEVELS);
-    int *output = Gs.data;
+    save_ppm_image(Gs, "./out/output.ppm");
 
-    // save as ppm
-    // Save the output as a PPM file
-    FILE* out_fp = fopen("./img/output.ppm", "w");
-    if (out_fp == NULL) {
-        printf("Error opening output file.\n");
-        return 1;
-    }
-
-    // Write the PPM header
-    fprintf(out_fp, "P3\n");
-    fprintf(out_fp, "%d %d\n", 512, 512); // New image dimensions
-    fprintf(out_fp, "255\n"); // Max color value (assuming 8-bit colors)
-
-    // Write pixel data (output array should be in RGB format)
-    for (int i = 0; i < 512; i++) { // Output image height
-        for (int j = 0; j < 512; j++) { // Output image width
-            int idx = (i * 512 * 3) + (j * 3); // Index for RGB values in the flat array
-            fprintf(out_fp, "%d %d %d",
-                    (output[idx]), 
-                    (output[idx + 1]), 
-                    (output[idx + 2]));
-        }
-        fprintf(out_fp, "\n");
-    }
-
-    fclose(out_fp); // Close the output file
-
-    free(img.data); // Free input image memory
-    free(output);   // Free synthesized image memory
+    free(sample.data);  // Free input image memory
+    free(Gs.data);      // Free synthesized image memory
 
     return 0;
-
 }
