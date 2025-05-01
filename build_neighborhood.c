@@ -39,15 +39,12 @@ int upper_neighborhood[][2] = {
  *         Includes values from both the current and upper levels (if applicable).
  */
 double *build_neighborhood(Image *G, int L, int x, int y) {
-
-
     // Number of coordinate pairs of neighborhood arrays
     int neigh_count = sizeof(neighborhood) / sizeof(neighborhood[0]);
     int upper_neigh_count = sizeof(upper_neighborhood) / sizeof(upper_neighborhood[0]);
-
     int pixel_count = (neigh_count + upper_neigh_count) * 3;
-        
     double *pixels = malloc(pixel_count * sizeof(double));
+
 
     int idx = 0;
 
@@ -96,6 +93,6 @@ int match_neighborhood(double *Na, double *Ns, int l) {
     int res = 0;
     for (int i = 0; i < l; i++) {
         res += (Na[i] - Ns[i]) * (Na[i] - Ns[i]);
-    }    
+    }
     return res;
 }

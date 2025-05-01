@@ -20,17 +20,19 @@ Image texture_synthesis(Image Ia, int output_size, int pyramid_levels) {
     for (int i = 0; i < output_size; i++) {
         for (int j = 0; j < output_size; j++) {
             for (int c = 0; c < 3; c++) {
-                Is.data[(i*output_size*Is.channels) + (j*Is.channels) + c] = rand() % 255;
+                //printf("%f\n", (i*output_size*Is.channels) + (j*Is.channels) + c);
+                Is.data[(i*output_size*Is.channels) + (j*Is.channels) + c] = rand() % 256;
             }
         }
     }
 
     // create the gaussian pyramids
-    Image *Gs = build_gauss_pyramid(Is); // Is PROBLEM IS HERE
+    printf("%zu Is \n", sizeof(Is));
+    printf("%zu Ia \n", sizeof(Ia));
+   
+    Image *Gs = build_gauss_pyramid(Ia); // Is PROBLEM IS HERE
     Image *Ga = build_gauss_pyramid(Ia); // Ia
     
-    printf("we here\n");
-
     for (int l = pyramid_levels - 1; l >= 0; l--) {
         for (int i = 0; i < Gs[l].width; i++) {
             for (int j = 0; j < Gs[l].height; j++) {
@@ -44,12 +46,11 @@ Image texture_synthesis(Image Ia, int output_size, int pyramid_levels) {
         }
     }
     return Gs[0];
-
 }
 
 int main() {
     struct Image img;
-    char* image_path = "./img/cameraman_p3.ppm";
+    char* image_path = "./img/colorP3File.ppm";
     FILE* fp = fopen(image_path, "r");
     if (fp == NULL) {
         perror("Error opening file");
@@ -67,7 +68,7 @@ int main() {
         printf("Header = %s\n", header);
         return 1;
     }
-    
+
     img.data = (int*)malloc(img.width*img.height*img.channels*sizeof(int));
     // place image into img struct
     for (int i = 0; i < img.height; i++) {
@@ -81,7 +82,6 @@ int main() {
 
     Image Gs = texture_synthesis(img, 512, 4);
     int *output = Gs.data;
-
 
     // save as ppm
     // Save the output as a PPM file
@@ -100,7 +100,7 @@ int main() {
     for (int i = 0; i < 512; i++) { // Output image height
         for (int j = 0; j < 512; j++) { // Output image width
             int idx = (i * 512 * 3) + (j * 3); // Index for RGB values in the flat array
-            fprintf(out_fp, "%d %d %d ", 
+            fprintf(out_fp, "%d %d %d",
                     (output[idx]), 
                     (output[idx + 1]), 
                     (output[idx + 2]));
@@ -114,5 +114,5 @@ int main() {
     free(output);   // Free synthesized image memory
 
     return 0;
-    
+
 }
