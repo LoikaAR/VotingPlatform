@@ -75,7 +75,7 @@ int main() {
 
     Image Gs = texture_synthesis(sample, 128, 3);
 
-    save_ppm_image(Gs, "./out/output.ppm");
+    save_ppm_image(Gs, "./img/output.ppm");
 
     free(sample.data);  // Free input image memory
     free(Gs.data);      // Free synthesized image memory

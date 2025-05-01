@@ -38,13 +38,13 @@ int upper_neighborhood[][2] = {{-3, -3}, {-3, 0}, {-3, 3}, {0, -3}, {0, 0},
  * of pixel (x, y). Includes values from both the current and upper levels (if
  * applicable).
  */
-double *build_neighborhood(Image *G, int L, int x, int y) {
+int *build_neighborhood(Image *G, int L, int x, int y) {
     // Number of coordinate pairs of neighborhood arrays
     int neigh_count = sizeof(neighborhood) / sizeof(neighborhood[0]);
     int upper_neigh_count =
         sizeof(upper_neighborhood) / sizeof(upper_neighborhood[0]);
     int pixel_count = (neigh_count + upper_neigh_count) * 3;
-    double *pixels = (int *)malloc(pixel_count * sizeof(int));
+    int *pixels = (int *)malloc(pixel_count * sizeof(int));
 
     int idx = 0;
 
@@ -85,6 +85,7 @@ double *build_neighborhood(Image *G, int L, int x, int y) {
             pixels[idx++] = G[L + 1].data[index + 2];  // Blue
         }
     }
+
     return pixels;
 }
 
