@@ -26,7 +26,7 @@ Image im_gauss_filt(double** kernel, int height, int width, int colors, int kr, 
     for (int i = 0; i < height; i++) {
         printf("row %d\n", i);
         for (int j = 0; j < width; j++) {
-            for (int k = 0; k < 3; k++) {
+            for (int k = 0; k < colors; k++) {
                 double sum = 0.0;
                 for (int ik = -kr; ik <= kr; ik++) {
                     for (int jk = -kr; jk <= kr; jk++) {
@@ -40,6 +40,7 @@ Image im_gauss_filt(double** kernel, int height, int width, int colors, int kr, 
                 }
                 pixels_out.data[(i*width*colors) + (j*colors) + k] = (int)sum;
             }
+            // printf("here?\n");
         }
     }
     return pixels_out;
@@ -52,8 +53,9 @@ Image *build_gauss_pyramid(Image img) {
     Image* gauss_pyramid = malloc(NUM_LEVELS * sizeof(Image));
 
     // 0th level of pyramid = original image
-    gauss_pyramid[0].data = (double*)malloc(img.width*img.height*img.channels*sizeof(double)); 
+    gauss_pyramid[0].data = (int*)malloc(img.width*img.height*img.channels*sizeof(int)); 
     memcpy(gauss_pyramid[0].data, img.data, img.width*img.height*img.channels*sizeof(int));
+
     gauss_pyramid[0].width = img.width;
     gauss_pyramid[0].height = img.height;
     gauss_pyramid[0].channels = img.channels;
@@ -68,7 +70,7 @@ Image *build_gauss_pyramid(Image img) {
         gauss_pyramid[p].height = gauss_pyramid[p-1].height/2;
         gauss_pyramid[p].channels = gauss_pyramid[p-1].channels;
         gauss_pyramid[p].maxval = gauss_pyramid[p-1].maxval;
-        gauss_pyramid[p].data = (double*)malloc(img.width*img.height*img.channels*sizeof(double));
+        gauss_pyramid[p].data = (int*)malloc(img.width*img.height*img.channels*sizeof(int));
 
         prev_height = gauss_pyramid[p-1].height;
         prev_width = gauss_pyramid[p-1].width;
@@ -105,7 +107,7 @@ Image *build_gauss_pyramid(Image img) {
         for (int i = 0; i < cur_height; i++) {
             for (int j = 0; j < cur_width; j++) {
                 for (int k = 0; k < 3; k++) {
-                    fprintf(out_f, "%f ", gauss_pyramid[p].data[(i*img.width*img.channels) + (j*img.channels) + k]); // can replace img.L
+                    fprintf(out_f, "%d ", gauss_pyramid[p].data[(i*img.width*img.channels) + (j*img.channels) + k]); // can replace img.L
                 }
             }
             fprintf(out_f, "\n");
@@ -115,35 +117,35 @@ Image *build_gauss_pyramid(Image img) {
     return gauss_pyramid;
 }
 
-// int main() {
-//     struct Image img;
-//     char* image_path = "./img/sub_file.ppm";
-//     FILE* fp = fopen(image_path, "r");
-//     char header[3];
-//     int width, height, max_color;
-//     fscanf(fp,"%s", header);             // ppm header, rn works for P3 only
-//     fscanf(fp, "%d %d", &img.x, &img.y); // x = width, y = height
-//     fscanf(fp, "%d", &img.rgb_clamp);    // max rgb value
-//     img.L = 3;                           // number of color channels, does not change
+int main_fun() {
+    struct Image img;
+    char* image_path = "./img/rand_noise.ppm";
+    FILE* fp = fopen(image_path, "r");
+    char header[3];
+    int width, height, max_color;
+    fscanf(fp,"%s", header);             // ppm header, rn works for P3 only
+    fscanf(fp, "%d %d", &img.width, &img.height); // x = width, y = height
+    fscanf(fp, "%d", &img.maxval);       // max rgb value
+    img.channels = 3;                           // number of color channels, does not change
 
-//     // check header format for color images
-//     if (header[0] != 'P' || header[1] != '3') {
-//         printf("Invalid file format.\n");
-//         printf("Header = %s\n", header);
-//         return 1;
-//     }
+    // check header format for color images
+    if (header[0] != 'P' || header[1] != '3') {
+        printf("Invalid file format.\n");
+        printf("Header = %s\n", header);
+        return 1;
+    }
 
-//     img.pixels = (int*)malloc(img.x*img.y*img.L*sizeof(int));
+    img.data = (int*)malloc(img.width*img.height*img.channels*sizeof(int));
 
-//     // place image into img struct
-//     for (int i = 0; i < img.y; i++) {
-//         for (int j = 0; j < img.x; j++) {
-//             for (int k = 0; k < img.L; k++) {
-//                 fscanf(fp, "%d", &(img.pixels[(i*img.x*img.L) + (j*img.L) + k]));
-//             }
-//         }
-//     }
-//     fclose(fp); // close input file
+    // place image into img struct
+    for (int i = 0; i < img.height; i++) {
+        for (int j = 0; j < img.width; j++) {
+            for (int k = 0; k < img.channels; k++) {
+                fscanf(fp, "%d", &(img.data[(i*img.width*img.channels) + (j*img.channels) + k]));
+            }
+        }
+    }
+    fclose(fp); // close input file
 
-//     struct Image* gauss_pyramid = build_gauss_pyramid(img);
-// }
+    struct Image* gauss_pyramid = build_gauss_pyramid(img);
+}

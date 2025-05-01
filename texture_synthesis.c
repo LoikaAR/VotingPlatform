@@ -12,15 +12,21 @@ Image texture_synthesis(Image Ia, int output_size, int pyramid_levels) {
     // initialize image with random noise
     Image Is;
     Is.width = output_size;
-    Is.height = output_size;
+    Is.height = output_size; // assuming image is a square
     Is.maxval = Ia.maxval;
-    Is.data = (double*)malloc(arraySize * sizeof(double));
+    Is.channels = 3;
+    Is.data = (int*)malloc(arraySize * sizeof(int));
 
-    for (int i = 0; i < arraySize; i++) {
-        Is.data[i] = rand() % 255;
+    for (int i = 0; i < output_size; i++) {
+        for (int j = 0; j < output_size; j++) {
+            for (int c = 0; c < 3; c++) {
+                Is.data[(i*output_size*Is.channels) + (j*Is.channels) + c] = rand() % 255;
+            }
+        }
     }
+
     // create the gaussian pyramids
-    Image *Gs = build_gauss_pyramid(Is); // Is
+    Image *Gs = build_gauss_pyramid(Is); // Is PROBLEM IS HERE
     Image *Ga = build_gauss_pyramid(Ia); // Ia
     
     printf("we here\n");
@@ -43,7 +49,7 @@ Image texture_synthesis(Image Ia, int output_size, int pyramid_levels) {
 
 int main() {
     struct Image img;
-    char* image_path = "./img/field_p3.ppm";
+    char* image_path = "./img/cameraman_p3.ppm";
     FILE* fp = fopen(image_path, "r");
     if (fp == NULL) {
         perror("Error opening file");
@@ -62,24 +68,24 @@ int main() {
         return 1;
     }
     
-    img.data = (double*)malloc(img.width*img.height*img.channels*sizeof(double));
+    img.data = (int*)malloc(img.width*img.height*img.channels*sizeof(int));
     // place image into img struct
     for (int i = 0; i < img.height; i++) {
         for (int j = 0; j < img.width; j++) {
             for (int k = 0; k < img.channels; k++) {
-                fscanf(fp, "%lf", &(img.data[(i*img.width*img.channels) + (j*img.channels) + k]));
+                fscanf(fp, "%d", &(img.data[(i*img.width*img.channels) + (j*img.channels) + k]));
             }
         }
     }
     fclose(fp); // close input file
 
     Image Gs = texture_synthesis(img, 512, 4);
-    double *output = Gs.data;
+    int *output = Gs.data;
 
 
     // save as ppm
     // Save the output as a PPM file
-    FILE* out_fp = fopen("output.ppm", "w");
+    FILE* out_fp = fopen("./img/output.ppm", "w");
     if (out_fp == NULL) {
         printf("Error opening output file.\n");
         return 1;
@@ -95,9 +101,9 @@ int main() {
         for (int j = 0; j < 512; j++) { // Output image width
             int idx = (i * 512 * 3) + (j * 3); // Index for RGB values in the flat array
             fprintf(out_fp, "%d %d %d ", 
-                    (int)(output[idx]), 
-                    (int)(output[idx + 1]), 
-                    (int)(output[idx + 2]));
+                    (output[idx]), 
+                    (output[idx + 1]), 
+                    (output[idx + 2]));
         }
         fprintf(out_fp, "\n");
     }
