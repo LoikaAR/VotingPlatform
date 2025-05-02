@@ -1,6 +1,7 @@
 #include "image.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 Image load_ppm_image(const char *path) {
     Image img;
