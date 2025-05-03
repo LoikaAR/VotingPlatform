@@ -1,13 +1,15 @@
 #include "texture_synthesis.h"
 
 #include <stdio.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "find_best_match.h"
 #include "gauss_filter.h"
 #include "gauss_pyramid.h"
 #include "image.h"
 
-Image texture_synthesis(Image sample_img, int output_size, int pyramid_levels) {
+Image texture_synthesis(Image sample_img, int output_size, int levels) {
     /* 1. Initialize output image with random noise. */
     srand(0);  // Set seed for reproducibility
     int out_data_size = sample_img.channels * output_size * output_size;
@@ -35,22 +37,29 @@ Image texture_synthesis(Image sample_img, int output_size, int pyramid_levels) {
 
     /* 2. Build Gaussian pytamids for sample and output. */
 
-    printf("> sample_img (%d x %d)\n", sample_img.width, sample_img.height);
-    printf("> output_img (%d x %d)\n", output_img.width, output_img.height);
+    printf("(%dx%d) -> (%dx%d)\n", sample_img.width, sample_img.height,
+           output_img.width, output_img.height);
 
-    Image *output_pyr = build_gauss_pyramid(output_img);
-    printf("> Built output_pyramid\n");
-    Image *sample_pyr = build_gauss_pyramid(sample_img);
-    printf("> Built sample_pyramid\n");
+    printf("Building output_pyramid...\n");
+    Image *output_pyr = build_gauss_pyramid(output_img, levels);
+    printf("\t\tok\n");
+
+    printf("Building sample pyramid...\n");
+    Image *sample_pyr = build_gauss_pyramid(sample_img, levels);
+    printf("\t\tok\n");
 
     /* Step 3: Texture synthesis by matching at each level. */
-    for (int l = pyramid_levels - 1; l >= 0; l--) {
-        printf("Synthesizing at pyramid level %d...\n", l);
+    printf("Synthesizing...\n");
+    for (int l = levels - 1; l >= 0; l--) {
+        // Needed for process logging
+        int total_pixels = output_pyr[l].width * output_pyr[l].height;
+        int current_pixel = 0;
+        printf("  [Level 1/%d]:   0%%", levels);
 
         for (int y = 0; y < output_pyr[l].height; y++) {
             for (int x = 0; x < output_pyr[l].width; x++) {
                 int best_match_idx =
-                    find_best_match(sample_pyr, output_pyr, l, y, x);
+                    find_best_match(sample_pyr, output_pyr, l, levels, y, x);
 
                 int output_base = (y * output_pyr[l].width + x) * 3;
                 int sample_base = best_match_idx * 3;
@@ -58,6 +67,16 @@ Image texture_synthesis(Image sample_img, int output_size, int pyramid_levels) {
                 for (int c = 0; c < 3; c++) {
                     output_pyr[l].data[output_base + c] =
                         sample_pyr[l].data[sample_base + c];
+                }
+
+                // Show progress
+                if (++current_pixel % 100 == 0 ||
+                    current_pixel == total_pixels) {
+                    int percent = (current_pixel * 100) / total_pixels;
+                    printf("\r%-50s", " ");
+                    printf("\r  [Level %d/%d] Progress: %3d%%", levels - l,
+                           levels, percent);
+                    fflush(stdout);
                 }
             }
         }
@@ -67,15 +86,67 @@ Image texture_synthesis(Image sample_img, int output_size, int pyramid_levels) {
         save_ppm_image(output_pyr[l], filename);
     }
 
+    printf("\t\tok\n");
+
     return output_pyr[0];
 }
 
-int main() {
-    Image sample = load_ppm_image("./img/pebbles_64.ppm");
+void print_usage(const char *bin_name) {
+    printf("Usage: %s -i sample.ppm -o output.ppm -s size\n", bin_name);
+}
 
-    Image Gs = texture_synthesis(sample, 128, 3);
+int main(int argc, int **argv) {
+    char *sample_path = NULL;
+    char *output_path = NULL;
+    int size = 0;
 
-    save_ppm_image(Gs, "./img/output.ppm");
+    int opt = 0;
+    while ((opt = getopt(argc, argv, "i:o:s:")) != -1) {
+        switch (opt) {
+            case 'i':
+                sample_path = optarg;
+                break;
+            case 'o':
+                output_path = optarg;
+                break;
+            case 's':
+                size = atoi(optarg);
+                break;
+            default:
+                print_usage(argv[0]);
+                return 1;
+        }
+    }
+
+    if (!sample_path || !output_path || size <= 0) {
+        fprintf(stderr, "Missing required arguments.\n");
+        print_usage(argv[0]);
+        return 1;
+    }
+
+    clock_t start, end;
+
+    start = clock();
+
+    Image sample = load_ppm_image(sample_path);
+
+    Image Gs = texture_synthesis(sample, size, 5);
+
+    save_ppm_image(Gs, output_path);
+
+    end = clock();
+    double cpu_time_elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    int hours = (int)(cpu_time_elapsed / 3600);
+    int minutes = (int)((cpu_time_elapsed - (hours * 3600)) / 60);
+    int seconds = (int)(cpu_time_elapsed - (hours * 3600) - (minutes * 60));
+
+    if (hours > 0) {
+        printf("All done :) Time taken: %dh %dm %ds.\n", hours, minutes,
+               seconds);
+    } else {
+        printf("All done :) Time taken: %dm %ds.\n", minutes, seconds);
+    }
 
     free(sample.data);  // Free input image memory
     free(Gs.data);      // Free synthesized image memory

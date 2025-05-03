@@ -9,164 +9,106 @@
 #include "image.h"
 
 // take every 2nd pixel
-Image subsample(int height, int width, int colors, Image pixels_in,
-                Image pixels_out) {
-    int out_h = height / 2, out_w = width / 2;
-    for (int i = 0; i < height / 2; ++i) {
-        for (int j = 0; j < width / 2; ++j) {
-            for (int k = 0; k < colors; ++k) {
-                // take every 2nd pixel (2*i, 2*j)
-                pixels_out.data[(i * width * colors) + (j * colors) + k] =
-                    pixels_in
-                        .data[(i * 2 * width * colors) + (j * 2 * colors) + k];
+Image subsample(Image* src) {
+    int w2 = src->width / 2;
+    int h2 = src->height / 2;
+
+    Image dest = alloc_image(w2, h2, src->channels, src->maxval);
+
+    for (int y = 0; y < h2; y++) {
+        for (int x = 0; x < w2; x++) {
+            for (int c = 0; c < src->channels; c++) {
+                dest.data[(y * w2 + x) * src->channels + c] =
+                    src->data[((2 * y) * src->width + (2 * x)) * src->channels +
+                              c];
             }
         }
     }
-    return pixels_out;
+
+    return dest;
 }
+
+#define KERNEL_RADIUS 2
+static const double GAUSS_KERNEL[5][5] = {
+    {1 / 256.0, 4 / 256.0, 6 / 256.0, 4 / 256.0, 1 / 256.0},
+    {4 / 256.0, 16 / 256.0, 24 / 256.0, 16 / 256.0, 4 / 256.0},
+    {6 / 256.0, 24 / 256.0, 36 / 256.0, 24 / 256.0, 6 / 256.0},
+    {4 / 256.0, 16 / 256.0, 24 / 256.0, 16 / 256.0, 4 / 256.0},
+    {1 / 256.0, 4 / 256.0, 6 / 256.0, 4 / 256.0, 1 / 256.0}};
 
 // apply gauss kernel to an image
-Image im_gauss_filt(double** kernel, int height, int width, int colors, int kr,
-                    Image pixels_in, Image pixels_out) {
-    for (int i = 0; i < height; i++) {
-        printf("row %d\n", i);
-        for (int j = 0; j < width; j++) {
-            for (int k = 0; k < colors; k++) {
+void gaussian_filter(Image* src, Image* dest, int level, int total_levels) {
+    for (int y = 0; y < src->height; y++) {
+        // Show progress
+        float percent = (100.0 * (y + 1)) / src->height;
+        printf("\r%-50s", " ");
+        printf("\r  [Level %d/%d] Progress: %.2f%%", level + 1, total_levels,
+               percent);
+        fflush(stdout);
+
+        for (int x = 0; x < src->width; x++) {
+            for (int c = 0; c < src->channels; c++) {
                 double sum = 0.0;
-                for (int ik = -kr; ik <= kr; ik++) {
-                    for (int jk = -kr; jk <= kr; jk++) {
-                        int ni = i + ik;
-                        int nj = j + jk;
-                        // apply kernel as a convolution op, if within the image
-                        if (ni >= 0 && ni < height && nj >= 0 &&
-                            nj < width) {  // zero-padded
-                            sum += kernel[ik + kr][jk + kr] *
-                                   pixels_in.data[(ni * width * colors) +
-                                                  (nj * colors) + k];
-                        }
+
+                for (int i = -KERNEL_RADIUS; i <= KERNEL_RADIUS; i++) {
+                    int yi = y + i;
+                    if (yi < 0) yi = -yi;
+                    if (yi >= src->height) yi = 2 * src->height - yi - 1;
+
+                    for (int j = -KERNEL_RADIUS; j <= KERNEL_RADIUS; j++) {
+                        int xj = x + j;
+                        if (xj < 0) xj = -xj;
+                        if (xj >= src->width) xj = 2 * src->width - xj - 1;
+
+                        double v =
+                            (double)src
+                                ->data[(yi * src->width + xj) * src->channels +
+                                       c];
+                        sum += v * GAUSS_KERNEL[i + 2][j + 2];
                     }
                 }
-                pixels_out.data[(i * width * colors) + (j * colors) + k] =
-                    (int)sum;
+
+                int val = (int)round(sum);
+                if (val < 0) val = 0;
+                if (val > src->maxval) val = src->maxval;
+                dest->data[(y * src->width + x) * src->channels + c] = val;
             }
-            // printf("here?\n");
         }
     }
-    return pixels_out;
 }
 
-Image* build_gauss_pyramid(Image img) {
-    double** kernel = make_gauss_kernel();
-    int kr = kernel_size / 2;
-    // struct Image gauss_pyramid[NUM_LEVELS];
-    Image* gauss_pyramid = malloc(NUM_LEVELS * sizeof(Image));
+/**
+ * @brief Builds neighborhood of pixel (x, y) at given level in a Gaussian
+ * pyramid.
+ *
+ * @param img The image, starting level 0.
+ *
+ * @return The Gaussian pyramid derived from `img`.
+ */
+Image* build_gauss_pyramid(Image img, int levels) {
+    Image* pyr = (Image*)malloc(levels * sizeof(Image));
 
-    // 0th level of pyramid = original image
-    gauss_pyramid[0].data =
-        (int*)malloc(img.width * img.height * img.channels * sizeof(int));
-    memcpy(gauss_pyramid[0].data, img.data,
+    // Copy original image to level 0
+    pyr[0] = alloc_image(img.width, img.height, img.channels, img.maxval);
+    memcpy(pyr[0].data, img.data,
            img.width * img.height * img.channels * sizeof(int));
 
-    gauss_pyramid[0].width = img.width;
-    gauss_pyramid[0].height = img.height;
-    gauss_pyramid[0].channels = img.channels;
-    gauss_pyramid[0].maxval = img.maxval;
-
-    // build pyramid
-    int cur_width, cur_height, prev_height, prev_width;
-    for (int p = 1; p < NUM_LEVELS; p++) {
-        printf("Building pyramid level %d\n", p);
-        // instantiate struct
-        gauss_pyramid[p].width = gauss_pyramid[p - 1].width / 2;
-        gauss_pyramid[p].height = gauss_pyramid[p - 1].height / 2;
-        gauss_pyramid[p].channels = gauss_pyramid[p - 1].channels;
-        gauss_pyramid[p].maxval = gauss_pyramid[p - 1].maxval;
-        gauss_pyramid[p].data =
-            (int*)malloc(img.width * img.height * img.channels * sizeof(int));
-
-        prev_height = gauss_pyramid[p - 1].height;
-        prev_width = gauss_pyramid[p - 1].width;
-        cur_height = gauss_pyramid[p].height;
-        cur_width = gauss_pyramid[p].width;
+    // Build subsequent levels
+    Image tmp;
+    for (int l = 1; l < levels; l++) {
+        tmp = alloc_image(pyr[l - 1].width, pyr[l - 1].height,
+                          pyr[l - 1].channels, pyr[l - 1].maxval);
 
         // apply gauss filter and subsample
-        gauss_pyramid[p] = im_gauss_filt(kernel, img.height, img.width,
-        img.channels, kr, gauss_pyramid[p-1], gauss_pyramid[p]);
-        gauss_pyramid[p] = subsample(img.height, img.width, img.channels,
-                                     gauss_pyramid[p], gauss_pyramid[p]);
+        gaussian_filter(&pyr[l - 1], &tmp, l, levels);
+        pyr[l] = subsample(&tmp);
 
-        // save into new file
-        char* filename;
-        char s1[3];
-        sprintf(s1, "%d", p);
-        // char* id = &img;
-        char* s0 = "./img/pyramid_lvl_";
-        char* s2 = "_file.ppm";
+        char filename[64];
+        sprintf(filename, "./img/pyr_level_%d.ppm", l);
+        save_ppm_image(pyr[l], filename);
 
-        filename = malloc(strlen(s0) + strlen(s1) + strlen(s2) + 1);
-        filename[0] = '\0';  // make it a string in mem
-        strcat(filename, s0);
-        strcat(filename, s1);
-        strcat(filename, s2);
-
-        printf("%s\n", filename);
-        if (remove(filename) == 0) {
-            // printf("Previous out_file deleted\n");
-        }
-
-        FILE* out_f = fopen(filename, "w");
-        fprintf(out_f, "P3\n");
-        fprintf(out_f, "%d %d\n", cur_width, cur_height);
-        fprintf(out_f, "%d\n", gauss_pyramid[p].maxval);
-
-        for (int i = 0; i < cur_height; i++) {
-            for (int j = 0; j < cur_width; j++) {
-                for (int k = 0; k < 3; k++) {
-                    fprintf(
-                        out_f, "%d ",
-                        gauss_pyramid[p].data[(i * img.width * img.channels) +
-                                              (j * img.channels) +
-                                              k]);  // can replace img.L
-                }
-            }
-            fprintf(out_f, "\n");
-        }
-        fclose(out_f);  // close file
+        free(tmp.data);
     }
-    return gauss_pyramid;
+
+    return pyr;
 }
-
-// int _main() {
-// struct Image img;
-// char* image_path = "./img/texture_1.ppm";
-// FILE* fp = fopen(image_path, "r");
-// char header[3];
-// int width, height, max_color;
-// fscanf(fp, "%s", header);  // ppm header, rn works for P3 only
-// fscanf(fp, "%d %d", &img.width, &img.height);  // x = width, y = height
-// fscanf(fp, "%d", &img.maxval);                 // max rgb value
-// img.channels = 3;  // number of color channels, does not change
-
-// // check header format for color images
-// if (header[0] != 'P' || header[1] != '3') {
-//     printf("Invalid file format.\n");
-//     printf("Header = %s\n", header);
-//     return 1;
-// }
-
-// img.data = (int*)malloc(img.width * img.height * img.channels * sizeof(int));
-
-// // place image into img struct
-// for (int i = 0; i < img.height; i++) {
-//     for (int j = 0; j < img.width; j++) {
-//         for (int k = 0; k < img.channels; k++) {
-//             fscanf(fp, "%d",
-//                    &(img.data[(i * img.width * img.channels) +
-//                               (j * img.channels) + k]));
-//         }
-//     }
-// }
-// fclose(fp);  // close input file
-
-// struct Image* gauss_pyramid = build_gauss_pyramid(img);
-// }

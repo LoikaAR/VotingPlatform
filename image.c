@@ -67,3 +67,14 @@ void save_ppm_image(const Image img, const char *dest) {
 
     fclose(fp);
 }
+
+// Allocate a new image with given dimensions and channels
+Image alloc_image(int width, int height, int channels, int maxval) {
+    Image img;
+    img.width = width;
+    img.height = height;
+    img.channels = channels;
+    img.maxval = maxval;
+    img.data = (int *)malloc(width * height * channels * sizeof(int));
+    return img;
+}
