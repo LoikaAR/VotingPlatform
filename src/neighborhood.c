@@ -1,4 +1,4 @@
-#include "build_neighborhood.h"
+#include "neighborhood.h"
 
 #include <math.h>
 #include <stdio.h>

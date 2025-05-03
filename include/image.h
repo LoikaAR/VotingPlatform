@@ -1,7 +1,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-// Structure to represent an image
+// Structure to represent an image.
 typedef struct Image {
     int width;     // Image width in px
     int height;    // Image height in px

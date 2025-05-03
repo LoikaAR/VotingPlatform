@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "gauss_filter.h"
 #include "image.h"
 
 // take every 2nd pixel

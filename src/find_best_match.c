@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "build_neighborhood.h"
 #include "image.h"
+#include "neighborhood.h"
 
 int find_best_match(Image *sample_pyr, Image *output_pyr, int level,
                     int total_levels, int xs, int ys) {

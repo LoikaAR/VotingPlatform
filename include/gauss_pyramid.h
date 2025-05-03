@@ -1,7 +1,5 @@
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#ifndef GAUSS_PYRAMID_H
+#define GAUSS_PYRAMID_H
 
 #include "image.h"
 
@@ -12,3 +10,5 @@ Image subsample(Image* src);
 void im_gauss_filt(Image* src, Image* dest, int level, int total_levels);
 
 Image* build_gauss_pyramid(Image img, int levels);
+
+#endif
