@@ -87,7 +87,7 @@ int *build_neighborhood(Image *G, int L, int total_levels, int x, int y) {
         int y_i = (y + dy + G[L].height) % G[L].height;
 
         // 2d coord to 1d index
-        int index = (x_i + G[L].width * y_i) * G[L].channels;
+        int index = (y_i + G[L].width * x_i) * G[L].channels;
         if (index < 0 ||
             index + 2 >= G[L].width * G[L].height * G[L].channels) {
             free(pixels);
@@ -111,7 +111,7 @@ int *build_neighborhood(Image *G, int L, int total_levels, int x, int y) {
             int y_i = (y / 2 + dy + G[L + 1].height) % G[L + 1].height;
 
             // 1d index to RGB
-            int index = (x_i + G[L + 1].width * y_i) * G[L + 1].channels;
+            int index = (y_i + G[L + 1].width * x_i) * G[L + 1].channels;
             if (index < 0 ||
                 index + 2 >= G[L].width * G[L].height * G[L].channels) {
                 free(pixels);

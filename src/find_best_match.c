@@ -22,7 +22,8 @@ int find_best_match(Image *sample_pyr, Image *output_pyr, int level,
 
             if (C_new < C) {
                 C = C_new;
-                best_pixel = (y * sample_pyr[level].width + x);
+                best_pixel = (x * sample_pyr[level].width + y);
+                // best_pixel = (y * sample_pyr[level].width + x);
             }
 
             free(Na);
