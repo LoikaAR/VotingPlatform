@@ -14,26 +14,7 @@
 #define NEIGHBORHOOD_SIZE 5
 #define UPPER_NEIGHBORHOOD_SIZE 3
 
-// Precompute the neighborhoods as arrays of relative coordinates
-
-// Neighborhood for the current level (5x5)
-// const int neighborhood[NEIGHBORHOOD_SIZE * NEIGHBORHOOD_SIZE][2] = {
-//     {-2, -2}, {-2, -1}, {-2, 0}, {-2, 1}, {-2, 2},  // Row 1
-//     {-1, -2}, {-1, -1}, {-1, 0}, {-1, 1}, {-1, 2},  // Row 2
-//     {0, -2},  {0, -1},  {0, 0},  {0, 1},  {0, 2},   // Row 3
-//     {1, -2},  {1, -1},  {1, 0},  {1, 1},  {1, 2},   // Row 4
-//     {2, -2},  {2, -1},  {2, 0},  {2, 1},  {2, 2}    // Row 5
-// };
-
-// // Neighborhood for the next coarser level (3x3)
-// const int upper_neighborhood[UPPER_NEIGHBORHOOD_SIZE *
-// UPPER_NEIGHBORHOOD_SIZE]
-//                             [2] = {
-//                                 {-1, -1}, {-1, 0}, {-1, 1},  // Row 1
-//                                 {0, -1},  {0, 0},  {0, 1},   // Row 2
-//                                 {1, -1},  {1, 0},  {1, 1}    // Row 3
-// };
-
+/* Precompute the neighborhoods as arrays of relative coordinates */
 // Neighborhood for the current level (5x5)
 const int neighborhood[NEIGHBORHOOD_SIZE * NEIGHBORHOOD_SIZE][2] = {
     {-2, -2}, {-2, -1}, {-2, 0}, {-2, 1}, {-2, 2},  // Row 1
