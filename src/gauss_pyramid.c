@@ -18,12 +18,10 @@ Image subsample(Image* src) {
         for (int x = 0; x < w2; x++) {
             for (int c = 0; c < src->channels; c++) {
                 dest.data[(y * w2 + x) * src->channels + c] =
-                    src->data[((2 * y) * src->width + (2 * x)) * src->channels +
-                              c];
+                    src->data[((2 * y) * src->width + (2 * x)) * src->channels + c];
             }
         }
     }
-
     return dest;
 }
 

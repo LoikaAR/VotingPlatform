@@ -5,6 +5,7 @@
 
 #include "image.h"
 #include "texture_synthesis.h"
+#include "gauss_pyramid.h"
 
 void print_usage(const char *bin_name) {
     printf("Usage: %s -i sample.ppm -o output.ppm -s size\n", bin_name);
@@ -45,7 +46,7 @@ int main(int argc, char **argv) {
 
     Image sample = load_ppm_image(sample_path);
 
-    Image Gs = texture_synthesis(sample, size, 5);
+    Image Gs = texture_synthesis(sample, size, NUM_LEVELS);
 
     save_ppm_image(Gs, output_path);
 
