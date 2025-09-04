@@ -1,23 +1,2 @@
-# Build dir
-bin/*
-!bin/.gitkeep
-
-# Compiled object files
-*.o
-*.obj
-
-# Compiled binary files
-*.out
-*.exe
-*.bin
-
-# Ignore all .ppm files
-*.ppm
-
-# Allow .ppm files only in the img/ directory
-!img/*.ppm
-
-# IDE settings
-.vscode/
-.idea/
-*.code-workspace
+./voting_engine/node_modules/
+./voting_engine/.next
